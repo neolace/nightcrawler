@@ -1,14 +1,3 @@
-"""
-    +===================
-    + NightCrawler
-    +===================
-
-    Last Update: 07OCT2016
-    Remarks: Migrated from Python 2.7
-
-    @author: snoopymx
-    @date: 27AUG2016
-"""
 
 # http://docs.python-requests.org/en/master/
 import requests
@@ -25,19 +14,19 @@ ROOT = 'http://www.example.com/'
 # Time out time for http connections
 TIMEOUT = (5, 10)
 
-VERSION = 1.5
+VERSION = 1.6
 
 class Parse(HTMLParser):
     """
         Parse HTML text
     """
-    
+
     def __init__(self):
         HTMLParser.__init__(self)
         self.DATA = []
         self.HREF = []
         self.CTAG = ''
-        
+
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
             self.CTAG = tag
@@ -48,11 +37,11 @@ class Parse(HTMLParser):
                         self.HREF.append(my_href)
         else:
             self.CTAG = ''
-            
+
     def handle_endtag(self, tag):
         #print "Encountered an end tag :", tag
         pass
-        
+
     def handle_data(self, data):
         if self.CTAG == 'a':
             self.DATA.append(data)
@@ -67,7 +56,7 @@ class Parse(HTMLParser):
         self.DATA = []
         self.HREF = []
         self.CTAG = ''
-        
+
 class Crawler(object):
     """
         Main crawler object
@@ -84,7 +73,39 @@ class Crawler(object):
         self.BROKEN_LINKS = set()
         self.EMAIL_ACCOUNTS = set()
         self.TEL_NUMS = set()
-        
+        self.NAME = set()
+        self.SURNAME = set()
+        self.TITLE = set()
+        self.COMPANY = set()
+        self.JOB = set()
+        self.DEPARTMENT = set()
+        self.OFFICE = set()
+        self.FAX = set()
+        self.PHONE_NUMBERS = set()
+        self.MOBILE = set()
+        self.EMAIL = set()
+        self.WEBSITE = set()
+        self.ADDRESS = set()
+        self.CITY = set()
+        self.STATE = set()
+        self.ZIP = set()
+        self.COUNTRY = set()
+        self.COUNTRY_CODE = set()
+        self.LANGUAGE = set()
+        self.CURRENCY = set()
+        self.TIMEZONE = set()
+        self.CRAWL_TIME = time.strftime("%Y-%m-%d %H:%M:%S")
+        self.VERSION = VERSION
+        self.parse = Parse()
+        self.map_files(root)
+        self.ADDRESS = self.ADDRESS.union(self.CITY)
+        self.ADDRESS = self.ADDRESS.union(self.STATE)
+        self.ADDRESS = self.ADDRESS.union(self.ZIP)
+        self.ADDRESS = self.ADDRESS.union(self.COUNTRY)
+        self.ADDRESS = self.ADDRESS.union(self.COUNTRY_CODE)
+        self.ADDRESS = self.ADDRESS.union(self.LANGUAGE)
+
+
     def parse_base_url(self, url):
         """
             Create a valid base url
@@ -107,7 +128,7 @@ class Crawler(object):
         r1 = '{0}://{1}{2}'.format(r1.scheme, r1.netloc, r1.path)
         return r1
 
-  
+
     def get_contype(self, headerct = ''):
         """
             Return MIME type from a valid 'content-type' HTTP header
@@ -115,7 +136,7 @@ class Crawler(object):
             @param headerct: content-type
             @type headerct: string
         """
-        
+
         content_type = headerct.split(';')
         content_type = content_type[0].strip()
         return content_type
@@ -128,15 +149,15 @@ class Crawler(object):
             @param url: Base url from where to start crawling
             @type url: string
         """
-        
+
         rq = None
         mfiles = []
         r1 = urlsplit(url)
         if not r1.scheme and not r1.netloc:
             url = self.base_url + url
-        
+
         print('\n+ Crawling: {0}'.format(url))
-        
+
         try:
             rq = requests.get(url, timeout=TIMEOUT)
         except:
@@ -161,7 +182,7 @@ class Crawler(object):
         """
             Trigger function that starts to fetch links from self.base_url
         """
-        
+
         time_start = time.time()
         print('NightCrawler v{0}'.format(VERSION,))
         print('Please stand by ...\n')
@@ -171,7 +192,7 @@ class Crawler(object):
         # we are going to analize child by child until there
         # are no more new childs
         i = 0
-        
+
         while i < len(self.CHILD_LINKS):
             self.map_files(self.CHILD_LINKS[i])
             i += 1
@@ -186,23 +207,25 @@ class Crawler(object):
         print(self.CHILD_LINKS)
         print('Emails:')
         print(self.EMAIL_ACCOUNTS)
-        print('T:')
+        print('Tel:')
         print(self.TEL_NUMS)
+        print('Phone:')
+        print(self.PHONE_NUMBERS)
 
-        
-   
-   
+
+
+
     def fetch_links_from_url(self, base_text = '', url = ''):
         """
         Parse a webpage and return a list of valid links (urls)
 
         @param base_text: HTML Content
         @type base_text: string
-        @param url: Url 
+        @param url: Url
         """
 
         prep_url = self.clean_url(url)
-        
+
         urls = []
         data = []
         print('+ Fetch children from Base url:', prep_url)
@@ -213,27 +236,79 @@ class Crawler(object):
 
         # Its possible to use the other data parsed
         # e.g. Search in the data for emails, phones, etc
-        #data = parser.get_DATA()
-        
+        data = parser.get_DATA()
+
         # Get links that the parser fetched from the "a" tags
         urls = parser.get_HREF()
 
-        #print "URLS FOUND: %s" % (urls,)
-        #print "PREP URL: %s" % (prep_url,)
+        print("URLS FOUND: {0}",urls)
+        print("PREP URL: {0}}",prep_url)
 
         # Iterate over the urls and get all the possible childs
         for u in urls:
             tmp_url_src = urlsplit(u)
-            
+
             tmp_path = tmp_url_src.path.decode('utf-8').strip()
             tmp_scheme = tmp_url_src.scheme.decode('utf-8')
             tmp_netloc = tmp_url_src.netloc.decode('utf-8')
+
             # Skip email addresses
             if tmp_scheme == 'mailto':
                 self.EMAIL_ACCOUNTS.add(tmp_path)
                 continue
             if tmp_scheme == 'tel':
                 self.TEL_NUMS.add(tmp_path)
+                continue
+            if tmp_scheme == "name":
+                self.NAME.add(tmp_path)
+                continue
+            if tmp_scheme == "surname":
+                self.SURNAME.add(tmp_path)
+                continue
+            if tmp_scheme == "address":
+                self.ADDRESS.add(tmp_path)
+                continue
+            if tmp_scheme == "city":
+                self.CITY.add(tmp_path)
+                continue
+            if tmp_scheme == "state":
+                self.STATE.add(tmp_path)
+                continue
+            if tmp_scheme == "country":
+                self.COUNTRY.add(tmp_path)
+                continue
+            if tmp_scheme == "zip":
+                self.ZIP.add(tmp_path)
+                continue
+            if tmp_scheme == "title":
+                self.TITLE.add(tmp_path)
+                continue
+            if tmp_scheme == "company":
+                self.COMPANY.add(tmp_path)
+                continue
+            if tmp_scheme == "job":
+                self.JOB.add(tmp_path)
+                continue
+            if tmp_scheme == "department":
+                self.DEPARTMENT.add(tmp_path)
+                continue
+            if tmp_scheme == "office":
+                self.OFFICE.add(tmp_path)
+                continue
+            if tmp_scheme == "fax":
+                self.FAX.add(tmp_path)
+                continue
+            if tmp_scheme == "phone":
+                self.PHONE_NUMBERS.add(tmp_path)
+                continue
+            if tmp_scheme == "mobile":
+                self.MOBILE.add(tmp_path)
+                continue
+            if tmp_scheme == "website":
+                self.WEBSITE.add(tmp_path)
+                continue
+            if tmp_scheme == "email":
+                self.EMAIL.add(tmp_path)
                 continue
 
             # Skip urls not in my domain
@@ -244,14 +319,13 @@ class Crawler(object):
             # Black List
             # Skip binary files (we only want web pages for now)
             IN_BLACK_LIST = False
-            for ext_path in [".jpg", ".jpeg", ".pdf", ".doc", ".xl",
-                             ".png", ".gif", ".mp"]:
+            for ext_path in [".jpg", ".jpeg", ".pdf", ".doc", ".docx", ".xlsx", ".jfif", ".xl", ".png", ".gif", ".mp", ".exe", ".zip", ".rar", ".7z", ".tar", ".gz", ".jar"]:
                 if ext_path in tmp_path:
                     IN_BLACK_LIST = True
 
             if IN_BLACK_LIST:
                 continue
-            
+
             # Skip empty links and relative urls
             if not tmp_path or tmp_path == '/':
                 continue
@@ -259,14 +333,14 @@ class Crawler(object):
             # Remove trailing /
             if tmp_path[0] == '/':
                 tmp_path = tmp_path[1:]
-                
+
             tmp_url = self.base_url + tmp_path
 
             # Continue to the next if already on childs list
             # Skip urls in broken links
             if tmp_path in self.CHILD_LINKS or tmp_path in self.BROKEN_LINKS:
                 continue
-            
+
             try:
                 rq = requests.get(tmp_url, timeout=TIMEOUT)
             except:
@@ -286,7 +360,7 @@ class Crawler(object):
 
         # END OF FUNC
 
-  
+
 
 
 # You can start NightCrawler from here :)
@@ -295,4 +369,4 @@ if __name__ == "__main__":
         crawler = Crawler(ROOT)
         crawler.start()
     except Exception as err:
-        print('Ups: ', err)
+        print('Exception: ', err)

@@ -8,8 +8,8 @@ import time
 import nightcrawler as NC
 
 """
-@author: snoopymx
-@date: 13SEP2016
+@author: neolace
+@date: 2022-06-28
 
 Tkinter Documentation:
 http://knowpapa.com/ttk-treeview/
@@ -19,12 +19,12 @@ https://docs.python.org/2/library/tkinter.html
 class Gui_Crawler(NC.Crawler):
     """
     """
-    
+
     def start(self, tree=None):
         """
             Trigger function that starts to fetch links from self.base_url
         """
-        
+
         time_start = time.time()
         print('Please stand by ...\n')
         print('BASE URL: {0}'.format(self.base_url))
@@ -33,7 +33,7 @@ class Gui_Crawler(NC.Crawler):
         # we are going to analize child by child until there
         # are no more new childs
         i = 0
-        
+
         while i < len(self.CHILD_LINKS):
             if i:
                 tree.insert('', 'end', '', text=self.CHILD_LINKS[i])
@@ -57,7 +57,7 @@ class MainWindow(Frame):
     def __init__(self, master=None):
         # Master frame
         master.minsize(width=768, height=400)
-        master.title("NightCrawler: Web Scrapper v{0}".format(NC.VERSION))
+        master.title("NightCrawler: Web Scraper v{0}".format(NC.VERSION))
         Frame.__init__(self, master)
         self.pack()
 
@@ -78,19 +78,19 @@ class MainWindow(Frame):
         crawler = Gui_Crawler(tmp_domain)
         try:
             crawler.start(tree)
-        except Exception (e):
+        except Exception as e:
             messagebox.showerror("Wrong Domain Address",
                                    "Please introduce a valid address\n" \
                                    "E.g.: http://valid_domain"
                                    "\n\nError MSG: {0}".format(e))
-            
+
 
     def add_widgets(self):
         # Txt box
         txt_domain = Entry(self, width=50)
         txt_domain.pack()
         txt_domain.focus_set()
-        
+
         # Tree container
         tree = MyTree(self)
         tree.configure(columns=("status",))
@@ -105,13 +105,12 @@ class MainWindow(Frame):
         tree.pack()
 
     def create_tree(self):
-        #tree = ttk.Treeview(self)
-        #tree.pack()
-        
+        tree = ttk.Treeview(self)
+        tree.pack()
 
         # Inserted at the root, program chooses id:
         tree.insert('', 'end', 'widgets', text='Widget Tour')
-         
+
         # Same thing, but inserted as first child:
         tree.insert('', 0, 'gallery', text='Applications')
 
@@ -119,7 +118,7 @@ class MainWindow(Frame):
         my_id = tree.insert('', 'end', text='Tutorial')
         # Inserted underneath an existing node:
         tree.insert('widgets', 'end', text='Canvas')
-        
+
         tree.insert(my_id, 'end', text='Tree')
 
         tree.insert('', 2,text="Ouw!")
@@ -128,25 +127,20 @@ class MainWindow(Frame):
 class MyTree(ttk.Treeview):
     def __init__(self, parent):
         ttk.Treeview.__init__(self, parent)
-    
+
     def insert(self, *args, **kwargs):
-        """
-            args = (parent, index, iid)
-        """
+
         try:
             node_children = self.get_children("widgets")
         except:
             node_children = []
-        
-         
+
         res = ttk.Treeview.insert(self, *args, **kwargs)
         print(node_children)
-        
 
         return res
-    
 
- 
+
 
 if __name__ == '__main__':
     root = Tk()
@@ -155,4 +149,4 @@ if __name__ == '__main__':
     try:
         root.destroy()
     except TclError:
-        print("Goodbye :)")
+        print("Exit :)")

@@ -7,7 +7,7 @@ import requests
 # Don't forget the "http://" part
 root = 'https://www.example.com/'
 # Time out time for http connections
-timeout = (5, 10)
+timeout: tuple[int, int] = (5, 10)
 
 version = 1.6
 
@@ -76,7 +76,7 @@ def clean_url(url):
         @type url: string
     """
     r1 = urlsplit(url)
-    r1 = '{0}://{1}{2}'.format(r1.scheme, r1.netloc, r1.path)
+    r1 = ('{0}://{1}{2}', r1.scheme, r1.netloc, r1.path)
     return r1
 
 
@@ -174,9 +174,9 @@ class Crawler(object):
         """
 
         time_start = time.time()
-        print('NightCrawler v{0}'.format(version, ))
+        print('NightCrawler v{0}', version)
         print('Please stand by ...\n')
-        print('BASE URL: {0}'.format(self.base_url))
+        print('BASE URL: {0}', self.base_url)
 
         # This variable is my index for the list of child links
         # we are going to analyze child by child until there

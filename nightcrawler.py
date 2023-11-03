@@ -28,8 +28,7 @@ class Parse(HTMLParser):
             self.ctag = tag
             for at in attrs:
                 if at[0] == 'href':
-                    my_href = at[1].encode('ascii', 'ignore').strip()
-                    if my_href:
+                    if my_href := at[1].encode('ascii', 'ignore').strip():
                         self.href.append(my_href)
         else:
             self.ctag = ''
@@ -144,7 +143,6 @@ class Crawler(object):
         """
 
         rq = None
-        mfiles = []
         r1 = urlsplit(url)
         if not r1.scheme and not r1.netloc:
             url = self.base_url
@@ -163,8 +161,7 @@ class Crawler(object):
 
         if contype != 'text/html':
             print('\tERROR: Is not a text/html\n')
-            return mfiles
-
+            return []
         # Parse page and search links
         self.fetch_links_from_url(rq.text, url)
 
@@ -190,9 +187,14 @@ class Crawler(object):
         print()
         print('-' * 32)
         print('Results:')
-        print('{0:d} email accounts, {1:d} tel. numbers and {2:d} links' 
-              '({3:6f} seconds) ... \n', len(self.email_accounts), len(self.tel_nums), len(self.child_links),
-              str(time.time() - time_start))
+        print(
+            '{0:d} email accounts, {1:d} tel. numbers and {2:d} links'
+            '({3:6f} seconds) ... \n',
+            len(self.email_accounts),
+            len(self.tel_nums),
+            len(self.child_links),
+            time.time() - time_start,
+        )
         print('Links:')
         print(self.child_links)
         print('Emails:')
@@ -296,14 +298,29 @@ class Crawler(object):
             if tmp_netloc not in self.base_url:
                 continue
 
-            # Black List
-            # Skip binary files (we only want web pages for now)
-            black_list = False
-            for ext_path in [".jpg", ".jpeg", ".pdf", ".doc", ".docx", ".xlsx", ".jfif", ".xl", ".png", ".gif", ".mp",
-                             ".exe", ".zip", ".rar", ".7z", ".tar", ".gz", ".jar"]:
-                if ext_path in tmp_path:
-                    black_list = True
-
+            black_list = any(
+                ext_path in tmp_path
+                for ext_path in [
+                    ".jpg",
+                    ".jpeg",
+                    ".pdf",
+                    ".doc",
+                    ".docx",
+                    ".xlsx",
+                    ".jfif",
+                    ".xl",
+                    ".png",
+                    ".gif",
+                    ".mp",
+                    ".exe",
+                    ".zip",
+                    ".rar",
+                    ".7z",
+                    ".tar",
+                    ".gz",
+                    ".jar",
+                ]
+            )
             if black_list:
                 continue
 
